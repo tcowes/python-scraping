@@ -46,7 +46,10 @@ def main():
         driver.execute_script("window.open('');")
         driver.switch_to.window(driver.window_handles[1])
         driver.get(content_link)
+        # en vez del sleep va funcion para verificar que tipo de contenido es y el scraping
+        time.sleep(5)
         driver.close()
+        driver.switch_to.window(driver.window_handles[0])
         content_titles.append(title)
         
     print(content_titles)
