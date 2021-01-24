@@ -28,21 +28,71 @@ driver.get("https://www.amazon.com/gp/video/search/ref=atv_sr_breadcrumb_p_n_way
 #             break
 #         last_height = new_height
 
-# Funcion utilizada para determinar si un contenido cuenta con episodios (por lo tanto corresponde a una serie)
-def has_episodes(url):
+# Funcion para ubicar el año de estreno del titulo
+# def get_release_year():
 
-    clickable_elements = url.find_element_by_xpath('//*[@id="a-page"]/div[4]/div[3]/div/div/div[2]/div')
+def tv_show_scraping():
+    # TODO: CORREGIR, NO TOMA BIEN LOS DIRECTORES 
+    # Container de la sección de elementos cliqueables (para buscar el detalle con los directores)
+    clickable_elements = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, '//*[@id="a-page"]/div[4]/div[3]/div/div/div[2]/div'))
+    )
     clickables = clickable_elements.find_elements_by_class_name('_2U-UfT')
-    return clickables[1].text == "Episodios"
+    for clickable in clickables:
+        if clickable.text == "Details":
+            clickable.click()
+            break
+    xpath_for_first_detail = driver.find_element_by_xpath('//*[@id="btf-product-details"]/div/dl[1]/dt/span')
+    if xpath_for_first_detail.text == "Directors":
+        directors = driver.find_element_by_xpath('//*[@id="btf-product-details"]/div/dl[1]/dd').text
+    else:
+        directors = "directores no especificados"
+
+    # Creacion del diccionario que va a contener toda la informacion relevante de cada titulo de tipo serie
+    data = {
+        "año": driver.find_element_by_css_selector('span[data-automation-id="release-year-badge"]').text,
+        "directores": directors,
+        "actores": driver.find_element_by_xpath('//*[@id="meta-info"]/div/dl[1]/dd').text,
+        "link": driver.current_url,
+        "descripción": driver.find_element_by_xpath('/html/head/meta[4]').get_attribute('content'),
+        "generos": driver.find_element_by_xpath('//*[@id="meta-info"]/div/dl[2]/dd').text,
+        "rating": driver.find_element_by_xpath('//*[@id="reviewsMedley"]/div/div[1]/div[2]/div[1]/div/div[2]/div/span/span').text 
+        + " stars (" + driver.find_element_by_xpath('//*[@id="reviewsMedley"]/div/div[1]/div[2]/div[2]/span').text + ")",
+        "tipo": "Serie"
+    }
+    return data
+
+def movie_scraping():
+    # Creacion del diccionario que va a contener toda la informacion relevante de cada titulo de tipo pelicula
+    data = {
+        "año": driver.find_element_by_css_selector('span[data-automation-id="release-year-badge"]').text,
+        "directores": driver.find_element_by_xpath('//*[@id="meta-info"]/div/dl[1]/dd').text,
+        "actores": driver.find_element_by_xpath('//*[@id="meta-info"]/div/dl[2]/dd').text,
+        "link": driver.current_url,
+        "descripción": driver.find_element_by_xpath('/html/head/meta[4]').get_attribute('content'),
+        "generos": driver.find_element_by_xpath('//*[@id="meta-info"]/div/dl[3]/dd').text,
+        "rating": driver.find_element_by_xpath('//*[@id="reviewsMedley"]/div/div[1]/div[2]/div[1]/div/div[2]/div/span/span').text 
+        + " stars (" + driver.find_element_by_xpath('//*[@id="reviewsMedley"]/div/div[1]/div[2]/div[2]/span').text + ")",
+        "tipo": "Pelicula"
+    }
+    return data
+
+# Imprimo de forma indentada cada key-value del diccionario pasado por parametros
+def print_dictionary(dict):
+    for key, value in dict.items():
+        print(key, ':', value)
 
 # Creo una lista para guardar los titulos dado que Prime Video a veces repite titulos porque los separa por temporadas, de esta forma se evitan duplicaciones.
 content_titles = []
 
+# Creo una lista para almacenar la data de cada titulo
+content_data = []
+
 # Obtengo el listado con todos los contenidos de la página y comienzo a iterar uno por uno.
 def main():
     # scrolldown()
-    contents = driver.find_elements_by_class_name('av-hover-wrapper')
-    for content in contents:
+    content_hovers = driver.find_elements_by_class_name('av-hover-wrapper')
+    for content in content_hovers:
         content_name = content.find_element_by_class_name('av-beard-title-link')
         title = content_name.text
         # Si el título del contenido ya aparece en el listado significa que ya fue analizado.
@@ -54,20 +104,26 @@ def main():
         driver.switch_to.window(driver.window_handles[1])
         driver.get(content_link)
 
-        # Determino si un contenido cuenta con episodios (por lo tanto corresponde a una serie)
+        # Determino si un contenido cuenta con episodios (por lo tanto corresponde a una serie).
         clickable_elements = driver.find_element_by_xpath('//*[@id="a-page"]/div[4]/div[3]/div/div/div[2]/div')
         clickables = clickable_elements.find_elements_by_class_name('_2U-UfT')
         if clickables[0].text == "Episodes":
-            # aca iria el scraping por serie 
-            title += " ES UNA SERIE"
+            content_data.append(tv_show_scraping())
         else:
-            # aca iria el scraping por pelicula 
-            title += " ES UNA PELICULA"
+            content_data.append(movie_scraping())
+        
+        # Cierro la ventana y vuelvo a la pagina principal.
         driver.close()
         driver.switch_to.window(driver.window_handles[0])
         content_titles.append(title)
 
-    print(content_titles)
+    # Inicializo un indice para iterar y agregarle los titulos a cada contenido con sus datos.
+    i = 0
+    for data in content_data:
+        print("titulo : " + content_titles[i])
+        print_dictionary(data)
+        print("\n")
+        i += 1
 
 if __name__ == "__main__":
     main()    

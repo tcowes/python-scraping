@@ -20,19 +20,19 @@ try:
             clickable.click()
             break
     xpath_for_first_detail = driver.find_element_by_xpath('//*[@id="btf-product-details"]/div/dl[1]/dt/span')
-    if xpath_for_first_detail.text == "Dirección":
+    if xpath_for_first_detail.text == "Directors":
         directors = driver.find_element_by_xpath('//*[@id="btf-product-details"]/div/dl[1]/dd').text
     else:
         directors = "directores no especificados"
 
-    # Creacion del diccionario que va a contener toda la informacion relevante de cada titulo
+    # Creacion del diccionario que va a contener toda la informacion relevante de cada titulo de tipo serie
     datos_serie = {
         "titulo": driver.find_element_by_xpath('//*[@id="a-page"]/div[4]/div[2]/div/div/div[2]/div[2]/div/h1').text,
         "año": driver.find_element_by_xpath('//*[@id="a-page"]/div[4]/div[2]/div/div/div[2]/div[2]/div/div[1]/span[2]/span').text,
         "directores": directors,
         "actores": driver.find_element_by_xpath('//*[@id="meta-info"]/div/dl[1]/dd').text,
         "link": driver.current_url,
-        "descripción": driver.find_element_by_xpath('//*[@id="a-page"]/div[4]/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div/div/div/div').text,
+        # "descripción": driver.find_element_by_xpath('/html/head/meta[4]').get_attribute(),
         "generos": driver.find_element_by_xpath('//*[@id="meta-info"]/div/dl[2]/dd').text,
         "rating": driver.find_element_by_xpath('//*[@id="reviewsMedley"]/div/div[1]/div[2]/div[1]/div/div[2]/div/span/span').text 
         + " stars (" + driver.find_element_by_xpath('//*[@id="reviewsMedley"]/div/div[1]/div[2]/div[2]/span').text + ")",
