@@ -124,6 +124,7 @@ def main():
             driver.close()
             driver.switch_to.window(driver.window_handles[0])
             content_titles.append(title)
+    driver.quit()
 
     # Inicializo un indice para iterar y agregarle los titulos a cada contenido con sus datos.
     i = 0
